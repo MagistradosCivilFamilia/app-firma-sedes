@@ -183,11 +183,16 @@ export default function VistaCarta() {
                     <td className="border border-slate-300 px-3 py-2 font-mono text-xs">{f.cedula}</td>
                     <td className="border border-slate-300 px-3 py-2 text-xs break-all">{f.correo ?? "—"}</td>
                     <td className="border border-slate-300 px-3 py-2 text-xs leading-relaxed">
-                      <div><strong>Folio:</strong> {f.folio_mostrado}</div>
-                      <div><strong>Fecha y hora:</strong> {f.fecha_firma}</div>
-                      <div className="italic mt-1">{f.nota_firma}</div>
-                      <div className="text-slate-500 mt-1">
-                        Conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012.
+                      <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-2">
+                        <div className="flex items-start gap-1 font-semibold text-emerald-700">
+                          <span aria-hidden>✓</span>
+                          <span>{f.nota_firma}</span>
+                        </div>
+                        <div className="mt-1 text-slate-700"><strong>Folio:</strong> {f.folio_mostrado}</div>
+                        <div className="text-slate-700"><strong>Fecha y hora:</strong> {f.fecha_firma}</div>
+                        <div className="text-slate-500 mt-1">
+                          Conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012.
+                        </div>
                       </div>
                     </td>
                     <td className="border border-slate-300 px-3 py-2 text-center">

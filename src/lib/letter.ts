@@ -32,10 +32,10 @@ export function parrafo1Texto(frase: string): string {
 // Bloque de "Firma electrónica" (columna de la tabla 2) para un firmante.
 function bloqueFirma(p: Participante, modo: Modo): string {
   return `
-    <div style="font-size:11px;line-height:1.4">
+    <div style="font-size:11px;line-height:1.45;border:1px solid #6ee7b7;background:#ecfdf5;border-radius:8px;padding:8px">
+      <div style="color:#047857;font-weight:bold;margin-bottom:4px">&#10003; Firmado electrónicamente correo verificado</div>
       <div><strong>Folio:</strong> ${escapeHtml(folioMostrado(p.folio, modo))}</div>
       <div><strong>Fecha y hora:</strong> ${escapeHtml(fechaHora(p.otp_validado_en))}</div>
-      <div style="margin-top:4px;font-style:italic">Firmado electrónicamente correo verificado</div>
       <div style="margin-top:4px;color:#374151">${escapeHtml(NOTA_LEGAL)}</div>
     </div>`;
 }
