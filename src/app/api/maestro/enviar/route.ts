@@ -3,6 +3,7 @@ import { exigirMaestro } from "@/lib/guard";
 import { getModo } from "@/lib/env";
 import { getEstado, listarFirmantes, actualizarEstado, marcarCorreoFinalEnviado } from "@/lib/repo";
 import { construirCartaHtml } from "@/lib/letter";
+import { construirCartaPdf } from "@/lib/pdf";
 import { enviarCorreo } from "@/lib/email";
 import { esCorreoValido, getIp } from "@/lib/util";
 import { audit } from "@/lib/audit";
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
   );
 
   const html = await construirCartaHtml({ modo, estado, firmantes });
+  const pdf = await construirCartaPdf({ modo, estado, firmantes });
 
   const asunto =
     (modo === "prueba" ? "[PRUEBA] " : "") +
@@ -54,12 +56,14 @@ export async function POST(req: NextRequest) {
       to: destinatarios,
       cc,
       subject: asunto,
+      // La carta va en el cuerpo del correo y, además, adjunta como PDF
+      // (con las firmas electrónicas y los códigos QR) para radicación.
       html,
       attachments: [
         {
-          filename: modo === "prueba" ? "carta-sedes-PRUEBA.html" : "carta-sedes.html",
-          content: html,
-          contentType: "text/html"
+          filename: modo === "prueba" ? "carta-sedes-PRUEBA.pdf" : "carta-sedes.pdf",
+          content: pdf,
+          contentType: "application/pdf"
         }
       ]
     });

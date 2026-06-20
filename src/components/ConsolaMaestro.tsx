@@ -214,7 +214,11 @@ export default function ConsolaMaestro() {
           )}
 
           <a className="btn-outline" href="/api/maestro/preview" target="_blank" rel="noreferrer">
-            Vista previa del documento
+            Vista previa (HTML)
+          </a>
+
+          <a className="btn-primary" href="/api/maestro/preview-pdf" target="_blank" rel="noreferrer">
+            Vista previa PDF
           </a>
 
           <button
