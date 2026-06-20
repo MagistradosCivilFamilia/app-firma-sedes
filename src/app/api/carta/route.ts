@@ -8,6 +8,7 @@ import { qrDataUrl, trazaUrl } from "@/lib/qr";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // Nota literal del bloque de firma (no reformular).
 const NOTA_FIRMA = "Firmado electrónicamente correo verificado";
