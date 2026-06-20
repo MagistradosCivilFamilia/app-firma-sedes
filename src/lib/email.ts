@@ -6,8 +6,15 @@ let _transport: nodemailer.Transporter | null = null;
 function transport(): nodemailer.Transporter {
   if (!_transport) {
     _transport = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: env.gmailUser, pass: env.gmailAppPassword }
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: env.gmailUser, pass: env.gmailAppPassword },
+      // Tiempos límite: si la red bloquea el SMTP, falla rápido con error claro
+      // en vez de quedarse colgado esperando.
+      connectionTimeout: 12_000,
+      greetingTimeout: 12_000,
+      socketTimeout: 20_000
     });
   }
   return _transport;

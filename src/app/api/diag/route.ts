@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
+import { verificarSmtp } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,5 +28,13 @@ export async function GET() {
     supabase = `EXCEPTION: ${e instanceof Error ? e.message : String(e)}`;
   }
 
-  return NextResponse.json({ envPresence, supabase, ts: new Date().toISOString() });
+  // Prueba de conexión a Gmail (con timeout): revela si Railway puede salir por SMTP.
+  let smtp: { ok: boolean; mensaje: string };
+  try {
+    smtp = await verificarSmtp();
+  } catch (e) {
+    smtp = { ok: false, mensaje: e instanceof Error ? e.message : String(e) };
+  }
+
+  return NextResponse.json({ envPresence, supabase, smtp, ts: new Date().toISOString() });
 }
