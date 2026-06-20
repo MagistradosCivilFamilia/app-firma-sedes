@@ -6,27 +6,16 @@ import { env } from "./env";
 // IPv6 -> "ENETUNREACH". Forzamos que Node prefiera IPv4 al resolver nombres.
 dns.setDefaultResultOrder("ipv4first");
 
-let _transport: nodemailer.Transporter | null = null;
+// Si hay BREVO_API_KEY, enviamos por la API HTTPS de Brevo (Railway bloquea el
+// SMTP saliente en el plan de prueba). Si no, usamos Gmail SMTP (local/respaldo).
+const BREVO_KEY = (process.env.BREVO_API_KEY || "").trim();
+const usaBrevo = BREVO_KEY.length > 0;
 
-function transport(): nodemailer.Transporter {
-  if (!_transport) {
-    _transport = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user: env.gmailUser, pass: env.gmailAppPassword },
-      // Tiempos límite: si la red bloquea el SMTP, falla rápido con error claro
-      // en vez de quedarse colgado esperando.
-      connectionTimeout: 12_000,
-      greetingTimeout: 12_000,
-      socketTimeout: 20_000
-    });
-  }
-  return _transport;
+function remitenteEmail(): string {
+  return (process.env.MAIL_FROM_EMAIL || process.env.GMAIL_USER || "").trim();
 }
-
-function remitente(): string {
-  return `"${env.mailFromName}" <${env.gmailUser}>`;
+function remitenteNombre(): string {
+  return (process.env.MAIL_FROM_NAME || "Proceso opción de sede").trim();
 }
 
 export interface AdjuntoCorreo {
@@ -35,16 +24,73 @@ export interface AdjuntoCorreo {
   contentType?: string;
 }
 
-export async function enviarCorreo(opts: {
+interface OpcionesCorreo {
   to: string | string[];
   cc?: string[];
   subject: string;
   html: string;
   text?: string;
   attachments?: AdjuntoCorreo[];
-}): Promise<void> {
+}
+
+export async function enviarCorreo(opts: OpcionesCorreo): Promise<void> {
+  if (usaBrevo) return enviarPorBrevo(opts);
+  return enviarPorSmtp(opts);
+}
+
+// ---- Brevo (HTTPS) ----------------------------------------------------------
+async function enviarPorBrevo(opts: OpcionesCorreo): Promise<void> {
+  const destinatarios = (Array.isArray(opts.to) ? opts.to : [opts.to]).map((email) => ({ email }));
+  const body: Record<string, unknown> = {
+    sender: { name: remitenteNombre(), email: remitenteEmail() },
+    to: destinatarios,
+    subject: opts.subject,
+    htmlContent: opts.html
+  };
+  if (opts.text) body.textContent = opts.text;
+  if (opts.cc && opts.cc.length > 0) body.cc = opts.cc.map((email) => ({ email }));
+  if (opts.attachments && opts.attachments.length > 0) {
+    body.attachment = opts.attachments.map((a) => ({
+      name: a.filename,
+      content: Buffer.from(a.content as Buffer | string).toString("base64")
+    }));
+  }
+
+  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": BREVO_KEY,
+      "content-type": "application/json",
+      accept: "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    const detalle = await r.text().catch(() => "");
+    throw new Error(`Brevo respondió ${r.status}: ${detalle}`);
+  }
+}
+
+// ---- Gmail SMTP (respaldo local) -------------------------------------------
+let _transport: nodemailer.Transporter | null = null;
+function transport(): nodemailer.Transporter {
+  if (!_transport) {
+    _transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: env.gmailUser, pass: env.gmailAppPassword },
+      connectionTimeout: 12_000,
+      greetingTimeout: 12_000,
+      socketTimeout: 20_000
+    });
+  }
+  return _transport;
+}
+
+async function enviarPorSmtp(opts: OpcionesCorreo): Promise<void> {
   await transport().sendMail({
-    from: remitente(),
+    from: `"${remitenteNombre()}" <${remitenteEmail()}>`,
     to: opts.to,
     cc: opts.cc && opts.cc.length > 0 ? opts.cc : undefined,
     subject: opts.subject,
@@ -54,8 +100,19 @@ export async function enviarCorreo(opts: {
   });
 }
 
-// Verifica la conexión SMTP (para diagnóstico desde la consola del maestro).
+// Verifica la conexión del proveedor de correo activo (para diagnóstico).
 export async function verificarSmtp(): Promise<{ ok: boolean; mensaje: string }> {
+  if (usaBrevo) {
+    try {
+      const r = await fetch("https://api.brevo.com/v3/account", {
+        headers: { "api-key": BREVO_KEY, accept: "application/json" }
+      });
+      if (r.ok) return { ok: true, mensaje: "Conexión con Brevo correcta (API key válida)." };
+      return { ok: false, mensaje: `Brevo ${r.status}: ${await r.text().catch(() => "")}` };
+    } catch (e) {
+      return { ok: false, mensaje: e instanceof Error ? e.message : String(e) };
+    }
+  }
   try {
     await transport().verify();
     return { ok: true, mensaje: "Conexión con Gmail correcta." };

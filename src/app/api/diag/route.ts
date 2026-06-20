@@ -17,6 +17,7 @@ export async function GET() {
     GMAIL_APP_PASSWORD: present("GMAIL_APP_PASSWORD"),
     MAESTRO_PASSWORD: present("MAESTRO_PASSWORD"),
     SESSION_SECRET: present("SESSION_SECRET"),
+    BREVO_API_KEY: present("BREVO_API_KEY"),
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL ?? null
   };
 
