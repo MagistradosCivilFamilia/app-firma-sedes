@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 import { env } from "./env";
+
+// Railway (y otros PaaS) no tienen salida por IPv6. Gmail a veces resuelve a
+// IPv6 -> "ENETUNREACH". Forzamos que Node prefiera IPv4 al resolver nombres.
+dns.setDefaultResultOrder("ipv4first");
 
 let _transport: nodemailer.Transporter | null = null;
 
