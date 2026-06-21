@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/supabase";
 import { verificarSmtp } from "@/lib/email";
+import { exigirMaestro } from "@/lib/guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,6 +9,10 @@ export const dynamic = "force-dynamic";
 // Diagnóstico SIN secretos: indica qué variables llegaron (solo true/false) y
 // si Supabase responde. Útil para verificar el despliegue. No expone valores.
 export async function GET() {
+  // Solo el maestro autenticado puede ver el diagnóstico (ya no es público).
+  const no = exigirMaestro();
+  if (no) return no;
+
   const present = (n: string) => !!process.env[n] && process.env[n]!.trim() !== "";
   const envPresence = {
     MODO: process.env.MODO ?? null,
