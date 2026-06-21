@@ -29,6 +29,13 @@ const COLOR_BORDE = "#6b7280";
 const VERDE_BG = "#ecfdf5";
 const VERDE_TX = "#047857";
 
+// Inserta oportunidades de salto (zero-width space) en textos largos sin
+// espacios (correos, URLs) para que se partan y no ensanchen la columna.
+const ZWSP = String.fromCharCode(0x200b);
+function quebrable(s: string): string {
+  return s.replace(/([@._-])/g, (m) => m + ZWSP);
+}
+
 const layoutTabla = {
   hLineWidth: () => 0.7,
   vLineWidth: () => 0.7,
@@ -74,9 +81,9 @@ export async function construirCartaPdf(params: CartaParams): Promise<Buffer> {
   for (const f of firmantes) {
     const qr = await qrDataUrl(trazaUrl(f.traza_id));
     tabla2Body.push([
-      { text: f.nombre_completo, fontSize: 8.5 },
-      { text: f.cedula, fontSize: 8.5 },
-      { text: f.correo_digitado ?? "—", fontSize: 8 },
+      { text: f.nombre_completo, fontSize: 8 },
+      { text: f.cedula, fontSize: 8 },
+      { text: quebrable(f.correo_digitado ?? "—"), fontSize: 7.5 },
       {
         // Recuadro verde de firma electrónica.
         fillColor: VERDE_BG,
@@ -87,7 +94,7 @@ export async function construirCartaPdf(params: CartaParams): Promise<Buffer> {
           { text: NOTA_LEGAL, color: "#374151", fontSize: 7, margin: [0, 2, 0, 0] }
         ]
       },
-      { image: qr, width: 70, alignment: "center" }
+      { image: qr, width: 62, alignment: "center" }
     ]);
   }
   if (firmantes.length === 0) {
@@ -130,7 +137,9 @@ export async function construirCartaPdf(params: CartaParams): Promise<Buffer> {
     { text: "Atentamente;", margin: [0, 0, 0, 14] },
     { text: "FIRMAS", bold: true, fontSize: 12, margin: [0, 4, 0, 6] },
     {
-      table: { headerRows: 1, widths: ["*", "auto", "*", 150, "auto"], body: tabla2Body },
+      // Anchos fijos que SUMAN dentro del ancho útil de A4 (≈495 pt) para que
+      // ninguna columna (en especial el QR) se salga de la hoja.
+      table: { headerRows: 1, widths: [78, 48, 92, "*", 74], body: tabla2Body },
       layout: layoutTabla
     }
   );
