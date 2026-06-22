@@ -283,6 +283,14 @@ export default function FlujoParticipante() {
               Atrás
             </button>
           </div>
+          <button
+            type="button"
+            className="text-sm text-corte underline w-full text-center"
+            onClick={() => { setError(null); setAviso(null); setPaso("otp"); }}
+            disabled={cargando}
+          >
+            Ya tengo un código — ingresarlo
+          </button>
         </form>
       )}
 
