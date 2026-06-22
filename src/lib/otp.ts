@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-export const OTP_VIGENCIA_MIN = 10; // minutos de validez del código
+export const OTP_VIGENCIA_MIN = 30; // minutos de validez del código
 export const OTP_MAX_INTENTOS = 5; // intentos fallidos antes de bloquear
 
 // Código de 6 dígitos generado con CSPRNG (no Math.random).
