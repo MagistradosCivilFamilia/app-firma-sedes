@@ -176,6 +176,11 @@ export default function ConsolaMaestro() {
         <button className="btn-outline" onClick={logout}>Salir</button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <a className="btn-primary" href="/maestro/procesos/nuevo">+ Firmar nuevo documento</a>
+        <a className="btn-outline" href="/maestro/procesos">Revisar documentos anteriores</a>
+      </div>
+
       {msg && (
         <div className={msg.tipo === "ok" ? "alert-ok" : "alert-error"}>{msg.texto}</div>
       )}
