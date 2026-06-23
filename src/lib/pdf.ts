@@ -52,12 +52,13 @@ export async function construirCartaPdf(params: CartaParams): Promise<Buffer> {
   const { modo, estado, firmantes } = params;
   const fecha = estado.fecha_carta ? fechaLarga(estado.fecha_carta) : fechaLarga(new Date());
 
-  // Tabla 1 — Sede de preferencia
+  // Tabla 1 — Sede de preferencia: en el ORDEN DE LA LISTA (puesto), no de firma.
+  const firmantesPorPuesto = [...firmantes].sort((a, b) => a.puesto_lista - b.puesto_lista);
   const cabecera = (t: string) => ({ text: t, bold: true, fillColor: COLOR_HEAD, fontSize: 9 });
   const tabla1Body: any[] = [
     [cabecera("Nombre"), cabecera("Cédula"), cabecera("Sede de preferencia")]
   ];
-  for (const f of firmantes) {
+  for (const f of firmantesPorPuesto) {
     tabla1Body.push([
       { text: f.nombre_completo, fontSize: 9 },
       { text: f.cedula, fontSize: 9 },

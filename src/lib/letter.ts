@@ -57,7 +57,9 @@ export async function construirCartaHtml(params: CartaParams): Promise<string> {
     qrPorCedula.set(f.cedula, await qrDataUrl(trazaUrl(f.traza_id)));
   }
 
-  const filasTabla1 = firmantes
+  // Tabla 1 — Sede de preferencia: en el ORDEN DE LA LISTA (puesto), no de firma.
+  const firmantesPorPuesto = [...firmantes].sort((a, b) => a.puesto_lista - b.puesto_lista);
+  const filasTabla1 = firmantesPorPuesto
     .map(
       (f) => `
       <tr>
